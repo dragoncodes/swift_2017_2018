@@ -4,7 +4,7 @@
 import Foundation
 
 protocol Runner {
-    func run(input: [FancyLanguageNode], rules: [RuleNode], inputFile: String) -> Maybe<String>
+    func run(input: [FancyLanguageNode], rules: [String: RuleNode], inputFile: String) -> Maybe<String>
 }
 
 extension Runner {
@@ -48,10 +48,8 @@ enum RunnerErrors: Error {
 }
 
 class HtmlRunner: Runner {
-    func run(input: [FancyLanguageNode], rules: [RuleNode], inputFile: String) -> Maybe<String> {
+    func run(input: [FancyLanguageNode], rules: [String: RuleNode], inputFile: String) -> Maybe<String> {
         return Maybe<String>.create { observer in
-
-            var parsedRules = rules.toDict()
 
             var outputPaths = [String]()
 
@@ -63,8 +61,8 @@ class HtmlRunner: Runner {
                 return Disposables.create()
             }
 
-            if let potentialOutput = parsedRules[fileName] {
-                outputPaths.append(potentialOutput)
+            if let potentialOutput = rules[fileName] {
+                outputPaths.append(potentialOutput.value)
             }
 
             if outputPaths.count == 0 {
@@ -73,7 +71,7 @@ class HtmlRunner: Runner {
                 return Disposables.create()
             }
 
-            func traverseNode(node: FancyLanguageNode) -> String {
+            func traverseNode(node: FancyLanguageNode, parentNode: FancyLanguageNode?) -> String {
                 var output = ""
 
                 guard let nodeValue = node.value else {
@@ -85,11 +83,22 @@ class HtmlRunner: Runner {
                 if hasChildren {
                     output += "<\(nodeValue)>"
                 } else {
-                    output += nodeValue
+
+                    if parentNode != nil,
+                       let parentRules = rules[parentNode!.name] {
+
+                        print(parentRules)
+                    }
+
+                    if !nodeValue.isEmpty {
+                        output += nodeValue
+                    } else {
+
+                    }
                 }
 
                 for child in node.children {
-                    output += traverseNode(node: child)
+                    output += traverseNode(node: child, parentNode: node)
                 }
 
                 if hasChildren {
@@ -101,7 +110,7 @@ class HtmlRunner: Runner {
 
             var output = ""
             for node in input {
-                output += traverseNode(node: node)
+                output += traverseNode(node: node, parentNode: nil)
             }
 
             var saveFileOperations = [Observable<Never>]()
@@ -121,61 +130,8 @@ class HtmlRunner: Runner {
 
             Observable.zip(saveFileOperations).subscribe(onNext: nil, onError: nil, onCompleted: onCompleted, onDisposed: nil)
 
-
-//                    .subscribe(onNext: {}, onError: {
-//                observer(.error(RunnerErrors.fileSavingError))
-//            }, onCompleted: {
-//                observer(.completed)
-//            }, onDisposed: {})
-
             return Disposables.create()
         }
     }
 
 }
-
-//class Runner {
-//
-//    static func run(input: [FancyLanguageNode], rules: [RuleNode], inputFile: String) -> Maybe<[String]> {
-//
-//        return Maybe<[String]>.create { observer in
-//            var parsedRules: [String: String] = [:]
-//
-//            rules.forEach { node in
-//                parsedRules[node.name] = node.value
-//            }
-//
-//            var outputPaths = [String: String]()
-//
-//            let separatedPath = inputFile.components(separatedBy: "/")
-//
-//            guard let fileName = separatedPath.last else {
-//                observer(.error(RunnerErrors.noOutputsDefined))
-//
-//                return Disposables.create {
-//                }
-//            }
-//
-//            if parsedRules[fileName] != nil {
-//                outputPaths[fileName] = parsedRules[fileName]
-//            }
-//
-//            if outputPaths.keys.count == 0 {
-//                observer(.error(RunnerErrors.noOutputsDefined))
-//
-//                return Disposables.create {
-//                }
-//            }
-//
-//            print(parsedRules[fileName])
-//
-//            return Disposables.create {
-//            }
-//        }
-//    }
-//
-//
-//    enum RunnerErrors: Error {
-//        case noOutputsDefined
-//    }
-//}

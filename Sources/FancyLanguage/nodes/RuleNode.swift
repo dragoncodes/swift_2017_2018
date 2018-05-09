@@ -8,6 +8,8 @@ class RuleNode {
 
     let value: String
 
+    var childRules = [ChildRule]()
+
     init(name: String, value: String) {
         self.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         self.value = value.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -15,6 +17,34 @@ class RuleNode {
 
     var description: String {
         return "\(name)  \(value)"
+    }
+}
+
+class ChildRule {
+    let selector: String
+
+    let rawRule: String
+
+    let value: String
+
+    init(selector: String, rawRule: String, value: String) {
+        self.selector = selector
+
+        self.rawRule = rawRule
+
+        self.value = value
+    }
+}
+
+extension ChildRule {
+    func isNodeEligible(node: FancyLanguageNode) -> Bool {
+
+        if selector == "*" {
+            return true
+        }
+
+        // TODO make this more generic
+        return false
     }
 }
 

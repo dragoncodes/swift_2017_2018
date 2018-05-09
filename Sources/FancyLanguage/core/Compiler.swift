@@ -27,7 +27,6 @@ class Compiler {
 
         let readFileData = readFile(inputFile)
 
-        print("Input")
         if let error = readFileData.left {
             print("error", error)
         } else if let fileContents = readFileData.right,
@@ -41,8 +40,6 @@ class Compiler {
 
                 result.append(node)
             }
-
-//                result.append(parsedResult)
         }
 
         return Either.fromRight(result)
