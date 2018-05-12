@@ -67,42 +67,68 @@ class Linker {
                     continue
                 }
 
+                let attributes = node.attributes.toDictionary()
+
                 let tokens = Lexer(input: childRule.rawRule).lex()
 
+                var result = true
+
+                var currentBoolLeaf = ValueBoolLeaf()
+
+                var pendingOperand: BoolOperator? = nil
+
                 for token in tokens {
-                    print(token)
+                    switch token {
+
+                    case .identifier(var identifier):
+
+                        if let attribForIdentifier = attributes[identifier] {
+                            identifier = attribForIdentifier.value as! String
+                        }
+
+                        if currentBoolLeaf.left == nil {
+                            currentBoolLeaf.left = identifier
+                        } else {
+                            currentBoolLeaf.right = identifier
+
+                            let evaluatedLeaf = currentBoolLeaf.evaluate()
+
+                            if pendingOperand == nil {
+                                result = result && evaluatedLeaf
+                            } else {
+                                switch pendingOperand! {
+                                case .and:
+                                    result = result && evaluatedLeaf
+                                case .or:
+                                    result = result || evaluatedLeaf
+                                default:
+                                    break
+                                }
+
+                                pendingOperand = nil
+                            }
+
+                            currentBoolLeaf = ValueBoolLeaf()
+                        }
+
+                    case .boolOperator(let operand):
+
+                        if currentBoolLeaf.operand == nil && currentBoolLeaf.left != nil {
+                            currentBoolLeaf.operand = operand
+                        } else {
+                            pendingOperand = operand
+                        }
+
+                    default:
+                        break
+                    }
                 }
 
-//                let boolExpression = parseText(text: childRule.rawRule)
-//
-//                if boolExpression.left != nil {
-//
-//                    for attribute in node.attributes {
-//                        if let boolLeft = boolExpression.left,
-//                           boolLeft.value.contains(attribute.name) {
-//
-//                            boolLeft.value = boolLeft.value.replacingOccurrences(of: attribute.name, with: attribute.value as! String)
-//
-//                            if boolLeft.value.contains("=") {
-//                                let left = boolLeft.value.split(separator: "=")[0].trimmingCharacters(in: .whitespacesAndNewlines)
-//                                let right = boolLeft.value.split(separator: "=")[1].trimmingCharacters(in: .whitespacesAndNewlines)
-//
-//                                if left == right {
-//                                    return childRule.value
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
+                if result {
+                    return childRule.value
+                }
             }
-
-//            parseText(text: parentRules.childRules[0].rawRule)
         }
-
-
-//        guard let resolvedName = ruleNode.value else {
-//            return node.name
-//        }
 
         return node.name
     }

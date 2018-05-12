@@ -54,8 +54,26 @@ class FancyLanguageNode {
     }
 }
 
-struct FancyLanguageProperty {
+class FancyLanguageProperty {
     let name: String
 
     let value: Any?
+
+    init(name: String, value: Any? = nil) {
+        self.name = name
+        self.value = value
+    }
+}
+
+extension Array where Element: FancyLanguageProperty {
+
+    func toDictionary() -> [String: FancyLanguageProperty] {
+        var result = [String: FancyLanguageProperty]()
+
+        for property in self {
+            result[property.name] = property
+        }
+
+        return result
+    }
 }

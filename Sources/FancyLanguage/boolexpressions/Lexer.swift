@@ -4,16 +4,17 @@
 import Foundation
 
 enum Token {
-    case openBrace, closeBrace, contains
+    case openBrace, closeBrace
     case identifier(String)
     case boolOperator(BoolOperator)
 }
 
-enum BoolOperator: Character {
+enum BoolOperator: String {
     case and = "&"
     case or = "|"
     case not = "!"
     case equals = "="
+    case contains = "?="
 }
 
 extension Character {
@@ -74,8 +75,7 @@ class Lexer {
             return nil
         }
 
-        // Handle single-scalar tokens, like comma,
-        // leftParen, rightParen, and the operators
+
         let singleTokMapping: [Character: Token] = [
             "(": .openBrace, ")": .closeBrace,
             "!": .boolOperator(.not),
@@ -97,7 +97,7 @@ class Lexer {
             }
 
             switch str {
-            case "?=": return .contains
+            case "?=": return .boolOperator(.contains)
             default: return .identifier(str)
             }
         }
