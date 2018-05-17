@@ -79,11 +79,7 @@ class Compiler {
             do {
                 let stringValue = jsonObj.value as! String
 
-//                if jsonObj.key.starts(with: "@") {
-//                    result.addAttribute(name: jsonObj.key, value: stringValue);
-//                } else {
                 result.value = stringValue
-//                }
             }
         }
 
