@@ -3,52 +3,9 @@
 
 import Foundation
 
-protocol Runner {
-    func run(input: [FancyLanguageNode], rules: [String: RuleNode], inputFile: String) -> Maybe<String>
-}
 
-extension Runner {
-    func saveFile(withName fileName: String, withContent content: String, encoding: String.Encoding) -> Completable {
-        return Completable.create { observer in
-
-            var success = true
-
-            if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-
-                let fileURL = dir.appendingPathComponent(fileName)
-
-                do {
-                    try content.write(to: fileURL, atomically: false, encoding: encoding)
-
-                } catch {
-                    success = false
-                }
-            } else {
-                success = false
-            }
-
-            guard success else {
-                observer(.error(RunnerErrors.fileSavingError))
-
-                return Disposables.create()
-            }
-
-            observer(.completed)
-
-            return Disposables.create()
-        }
-    }
-}
-
-
-enum RunnerErrors: Error {
-    case fileSavingError
-
-    case noOutputsDefined
-}
-
-class HtmlRunner: Runner {
-    func run(input: [FancyLanguageNode], rules: [String: RuleNode], inputFile: String) -> Maybe<String> {
+class HtmlRunner: BaseRunner {
+    override func run(input: [FancyLanguageNode], rules: [String: RuleNode], inputFile: String) -> Maybe<String> {
         return Maybe<String>.create { observer in
 
             var outputPaths = [String]()
@@ -84,11 +41,7 @@ class HtmlRunner: Runner {
                     output += "<\(nodeValue)>"
                 } else {
 
-                    if parentNode != nil,
-                       let parentRules = rules[parentNode!.name] {
-
-                        print(parentRules)
-                    }
+                    // TODO what is happening here
 
                     if !nodeValue.isEmpty {
                         output += nodeValue

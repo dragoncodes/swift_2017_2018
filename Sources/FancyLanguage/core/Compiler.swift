@@ -32,7 +32,7 @@ class Compiler {
         } else if let fileContents = readFileData.right,
                   let jsonDict = parseJson(from: fileContents).right {
 
-            let parsedResult = jsonDict.forEach { key, value in
+            jsonDict.forEach { key, value in
 
                 print("Compilation \(key) \(value)")
 

@@ -87,7 +87,11 @@ class RuleParser {
 
 let supportedChildrenSelectors = ["*"]
 
-let supportedFileExtensions = ["json", "xml", "html"]
+let supportedFileExtensions = [FileExtension.json, FileExtension.xml, FileExtension.html]
+
+enum FileExtension: String {
+    case json = "json", xml = "xml", html = "html"
+}
 
 extension String {
 
@@ -105,6 +109,10 @@ extension String {
     }
 
     func isSupportedFileExtension() -> Bool {
-        return supportedFileExtensions.contains(self)
+        guard let enumValue = FileExtension(rawValue: self) else {
+            return false
+        }
+
+        return supportedFileExtensions.contains(enumValue)
     }
 }

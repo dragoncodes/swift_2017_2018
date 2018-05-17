@@ -1,6 +1,14 @@
 //
 // Created by dragoncodes on 8.05.18.
 
+/*
+
+Heavily influenced and almost 1:1 copied from:
+
+https://harlanhaskins.com/2017/01/08/building-a-compiler-with-swift-in-llvm-part-1-introduction-and-the-lexer.html
+
+*/
+
 import Foundation
 
 enum Token {
@@ -10,9 +18,8 @@ enum Token {
 }
 
 enum BoolOperator: String {
-    case and = "&"
-    case or = "|"
-    case not = "!"
+    case and = "&&"
+    case or = "||"
     case equals = "="
     case contains = "?="
 }
@@ -26,6 +33,10 @@ extension Character {
     }
     var isAlphanumeric: Bool {
         return isalnum(value) != 0 || self == "@"
+    }
+
+    var isPotentialBool: Bool {
+        return self == "&" || self == "|" || self == "?" || self == "="
     }
 }
 
@@ -57,7 +68,7 @@ class Lexer {
 
     func readBooleanOperator() -> String {
         var str = ""
-        while let char = currentChar, char == "?" || char == "=" {
+        while let char = currentChar, char.isPotentialBool {
             str.characters.append(char)
             advanceIndex()
         }
@@ -78,9 +89,6 @@ class Lexer {
 
         let singleTokMapping: [Character: Token] = [
             "(": .openBrace, ")": .closeBrace,
-            "!": .boolOperator(.not),
-            "&": .boolOperator(.and),
-            "|": .boolOperator(.or),
             "=": .boolOperator(.equals)
         ]
 
@@ -89,7 +97,7 @@ class Lexer {
             return tok
         }
 
-        if char.isAlphanumeric || char == "?" || char == "." {
+        if char.isAlphanumeric || char.isPotentialBool || char == "?" || char == "." {
             var str = readIdentifierOrNumber()
 
             if str.isEmpty {
@@ -98,6 +106,8 @@ class Lexer {
 
             switch str {
             case "?=": return .boolOperator(.contains)
+            case "||": return .boolOperator(.or)
+            case "&&": return .boolOperator(.and)
             default: return .identifier(str)
             }
         }
