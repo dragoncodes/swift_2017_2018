@@ -3,30 +3,10 @@
 
 import Foundation
 
-class XmlRunner: BaseRunner {
+class XmlRunner: Runner {
 
-    override func run(input: [FancyLanguageNode], rules: [String: RuleNode], inputFile: String) -> Maybe<String> {
+    func run(input: [FancyLanguageNode], rules: [String: RuleNode], outputFile: String) -> Maybe<String> {
         return Maybe<String>.create { observer in
-
-            var outputPaths = [String]()
-
-            let separatedPath = inputFile.components(separatedBy: "/")
-
-            guard let fileName = separatedPath.last else {
-                observer(.error(RunnerErrors.noOutputsDefined))
-
-                return Disposables.create()
-            }
-
-            if let potentialOutput = rules[fileName] {
-                outputPaths.append(potentialOutput.value)
-            }
-
-            if outputPaths.count == 0 {
-                observer(.error(RunnerErrors.noOutputsDefined))
-
-                return Disposables.create()
-            }
 
             func traverseNode(node: FancyLanguageNode, parentNode: FancyLanguageNode?) -> XMLElement? {
 
@@ -87,22 +67,12 @@ class XmlRunner: BaseRunner {
                 root.addChild(childXmlElement)
             }
 
-            var saveFileOperations = [Observable<Never>]()
-            for outputPath in outputPaths {
-                saveFileOperations.append(
-                        self.saveFile(withName: outputPath, withContent: xml.xmlString, encoding: String.Encoding.utf8).asObservable()
-                )
-            }
-
-            func onError() {
-                observer(.error(RunnerErrors.fileSavingError))
-            }
-
-            func onCompleted() {
-                observer(.completed)
-            }
-
-            Observable.zip(saveFileOperations).subscribe(onNext: nil, onError: nil, onCompleted: onCompleted, onDisposed: nil)
+            self.saveFile(withName: outputFile, withContent: xml.xmlString, encoding: String.Encoding.utf8)
+                    .subscribe(onCompleted: {
+                        observer(.completed)
+                    }, onError: { _ in
+                        observer(.error(RunnerErrors.fileSavingError))
+                    })
 
             return Disposables.create()
         }

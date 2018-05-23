@@ -27,9 +27,9 @@ class Either<E, T> {
         return nil
     }
 
-    func foldLeft(leftHandler: (E?) -> ()) -> Either {
+    func foldLeft(leftHandler: (E) -> ()) -> Either {
         if (left != nil) {
-            leftHandler(left)
+            leftHandler(left!)
         }
 
         return self

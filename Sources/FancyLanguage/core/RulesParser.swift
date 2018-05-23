@@ -41,41 +41,40 @@ class RuleParser {
 
                         let ruleNode = RuleNode(name: ruleComponents[0], value: ruleComponents[1])
 
-                        if ruleNode.name.contains(".") {
-                            if let indexOfDot = ruleNode.name.index(of: ".") {
+                        // if the name contains a dot it's either a child rule or an output rule
+                        if ruleNode.name.contains("."),
+                           let indexOfDot = ruleNode.name.indexOfDot() {
 
-                                let childrenRule = String(ruleNode.name.substring(from: indexOfDot).dropFirst())
-                                let mainRuleName = ruleNode.name.substring(to: indexOfDot)
+                            let childrenRule = String(ruleNode.name.substring(from: indexOfDot).dropFirst())
+                            let mainRuleName = ruleNode.name.substring(to: indexOfDot)
 
-                                if !childrenRule.isSupportedFileExtension() {
+                            guard !childrenRule.isSupportedFileExtension() else {
 
-                                    guard let mainRuleNode = parsedRuleNodes[mainRuleName] else {
-                                        continue
-                                    }
+                                // If the rule is for input/output pair it is expected to have multiple outputs for a single input
+                                parsedRuleNodes.addNode(node: ruleNode, forKey: ruleNode.name)
 
-                                    for supportedChildSelector in supportedChildrenSelectors {
-                                        if childrenRule.contains(supportedChildSelector) {
-                                            let childRule = ChildRule(selector: supportedChildSelector,
-                                                    rawRule: childrenRule.substringFrom(phrase: supportedChildSelector),
-                                                    value: ruleNode.value)
+                                continue
+                            }
 
-                                            mainRuleNode.childRules.append(childRule)
-                                        }
-                                    }
-                                } else {
-                                    parsedRuleNodes[ruleNode.name] = ruleNode
+                            guard let mainRuleNode = parsedRuleNodes[mainRuleName] else {
+                                continue
+                            }
+
+                            for supportedChildSelector in supportedChildrenSelectors {
+                                let rawChildSelectorValue = supportedChildSelector.rawValue
+                                
+                                if childrenRule.contains(rawChildSelectorValue) {
+
+                                    let childRule = ChildRule(selector: rawChildSelectorValue,
+                                            rawRule: childrenRule.substringFrom(phrase: rawChildSelectorValue),
+                                            value: ruleNode.value)
+
+                                    mainRuleNode.childRules.append(childRule)
                                 }
-
-                                print(childrenRule)
-                            } else {
-                                parsedRuleNodes[ruleNode.name] = ruleNode
                             }
                         } else {
                             parsedRuleNodes[ruleNode.name] = ruleNode
                         }
-
-                        print("\(ruleNode.name) \(ruleNode.value)")
-
                     }
 
                     rules = parsedRuleNodes
@@ -85,12 +84,31 @@ class RuleParser {
     }
 }
 
-let supportedChildrenSelectors = ["*"]
+let supportedChildrenSelectors = [ChildSelector.all, ChildSelector.firstChild]
+
+enum ChildSelector: String {
+    case all = "*", firstChild = ">"
+}
 
 let supportedFileExtensions = [FileExtension.json, FileExtension.xml, FileExtension.html]
 
 enum FileExtension: String {
     case json = "json", xml = "xml", html = "html"
+}
+
+extension Dictionary where Key == String, Value == RuleNode {
+
+    mutating func addNode(node: RuleNode, forKey key: String) {
+
+        guard let oldValue: RuleNode = self[key] else {
+            self[key] = node
+
+            return
+        }
+
+        oldValue.values.append(oldValue.value)
+        oldValue.values.append(node.value)
+    }
 }
 
 extension String {
@@ -106,6 +124,10 @@ extension String {
         }
 
         return String(self[indexOfString...].dropFirst())
+    }
+
+    func indexOfDot() -> String.Index? {
+        return self.index(of: ".")
     }
 
     func isSupportedFileExtension() -> Bool {

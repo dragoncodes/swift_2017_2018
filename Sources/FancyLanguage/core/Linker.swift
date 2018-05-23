@@ -7,11 +7,11 @@ class Linker {
 
     private var input: [FancyLanguageNode]
 
-    private var rules: [String: RuleNode]
+    private var rules: [String: Any]
 
     var linkedNodes: [FancyLanguageNode]
 
-    init(input: [FancyLanguageNode], rules: [String: RuleNode]) {
+    init(input: [FancyLanguageNode], rules: [String: Any]) {
 
         self.input = input
 
@@ -25,7 +25,7 @@ class Linker {
         linkedNodes = [FancyLanguageNode]()
 
         input.forEach { node in
-            parseLanguageNode(node: node, parentNode: nil, parsedRules: rules)
+            parseLanguageNode(node: node, parentNode: nil)
 
             linkedNodes.append(node)
         }
@@ -33,9 +33,9 @@ class Linker {
         return linkedNodes.reversed()
     }
 
-    private func parseLanguageNode(node: FancyLanguageNode, parentNode: FancyLanguageNode?, parsedRules: [String: RuleNode]) {
+    private func parseLanguageNode(node: FancyLanguageNode, parentNode: FancyLanguageNode?) {
 
-        var resolvedValue = resolveLanguageNode(node: node, parentNode: parentNode, parsedRules: parsedRules)
+        var resolvedValue = resolveLanguageNode(node: node, parentNode: parentNode)
 
         node.attributes.forEach { property in
 
@@ -45,22 +45,22 @@ class Linker {
         }
 
         node.children.forEach { childNode in
-            parseLanguageNode(node: childNode, parentNode: node, parsedRules: parsedRules)
+            parseLanguageNode(node: childNode, parentNode: node)
         }
 
         node.value = resolvedValue
     }
 
-    private func resolveLanguageNode(node: FancyLanguageNode, parentNode: FancyLanguageNode?, parsedRules: [String: RuleNode]) -> String {
+    private func resolveLanguageNode(node: FancyLanguageNode, parentNode: FancyLanguageNode?) -> String {
 
-        if let ruleNode = parsedRules[node.name] {
-            return ruleNode.value
+        if let ruleNode = rules[node.name], ruleNode is RuleNode {
+            return (ruleNode as! RuleNode).value
         }
 
         if parentNode != nil,
-           let parentRules = parsedRules[parentNode!.name] {
+           let parentRules = rules[parentNode!.name], parentRules is RuleNode {
 
-            let childRules = parentRules.childRules
+            let childRules = (parentRules as! RuleNode).childRules
 
             for childRule in childRules {
                 guard childRule.isNodeEligible(node: node) else {

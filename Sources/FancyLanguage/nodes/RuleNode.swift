@@ -8,15 +8,32 @@ class RuleNode {
 
     let value: String
 
+    var values: [String]
+
     var childRules = [ChildRule]()
 
     init(name: String, value: String) {
         self.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         self.value = value.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        self.values = [String]()
     }
 
     var description: String {
         return "\(name)  \(value)"
+    }
+}
+
+extension RuleNode {
+    func traverse(iteratorCallback: (String) -> ()) {
+
+        if !values.isEmpty {
+            for iterValue in values {
+                iteratorCallback(iterValue)
+            }
+        } else {
+            iteratorCallback(value)
+        }
     }
 }
 

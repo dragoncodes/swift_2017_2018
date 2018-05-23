@@ -5,16 +5,7 @@ import Foundation
 
 protocol Runner {
 
-    func run(input: [FancyLanguageNode], rules: [String: RuleNode], inputFile: String) -> Maybe<String>
-}
-
-class BaseRunner: Runner {
-    func run(input: [FancyLanguageNode], rules: [String: RuleNode], inputFile: String) -> Maybe<String> {
-        return Maybe<String>.create { observer in
-
-            return Disposables.create()
-        }
-    }
+    func run(input: [FancyLanguageNode], rules: [String: RuleNode], outputFile: String) -> Maybe<String>
 }
 
 extension Runner {

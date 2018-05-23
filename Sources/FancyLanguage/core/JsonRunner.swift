@@ -3,28 +3,9 @@
 
 import Foundation
 
-class JsonRunner: BaseRunner {
-    override func run(input: [FancyLanguageNode], rules: [String: RuleNode], inputFile: String) -> Maybe<String> {
+class JsonRunner: Runner {
+    func run(input: [FancyLanguageNode], rules: [String: RuleNode], outputFile: String) -> Maybe<String> {
         return Maybe<String>.create { observer in
-            var outputPaths = [String]()
-
-            let separatedPath = inputFile.components(separatedBy: "/")
-
-            guard let fileName = separatedPath.last else {
-                observer(.error(RunnerErrors.noOutputsDefined))
-
-                return Disposables.create()
-            }
-
-            if let potentialOutput = rules[fileName] {
-                outputPaths.append(potentialOutput.value)
-            }
-
-            if outputPaths.count == 0 {
-                observer(.error(RunnerErrors.noOutputsDefined))
-
-                return Disposables.create()
-            }
 
             func traverseNode(node: FancyLanguageNode, parentNode: FancyLanguageNode?) -> [String: Any]? {
 
@@ -67,37 +48,28 @@ class JsonRunner: BaseRunner {
 
             root[firstNodeValue] = traverseNode(node: firstNode, parentNode: nil)
 
-            var saveFileOperations = [Observable<Never>]()
-            for outputPath in outputPaths {
-
-                do {
-
-                    guard JSONSerialization.isValidJSONObject(root) else {
-                        print(root)
-
-                        return Disposables.create()
-                    }
-
-                    let jsonData = try JSONSerialization.data(withJSONObject: root, options: JSONSerialization.WritingOptions()) as NSData
-                    let jsonString = NSString(data: jsonData as Data, encoding: String.Encoding.utf8.rawValue) as! String
-
-                    saveFileOperations.append(
-                            self.saveFile(withName: outputPath, withContent: jsonString, encoding: String.Encoding.utf8).asObservable()
-                    )
-                } catch _ {
-
-                }
-            }
-
-            func onError() {
-                observer(.error(RunnerErrors.fileSavingError))
-            }
-
             func onCompleted() {
                 observer(.completed)
             }
 
-            Observable.zip(saveFileOperations).subscribe(onNext: nil, onError: nil, onCompleted: onCompleted, onDisposed: nil)
+            do {
+
+                guard JSONSerialization.isValidJSONObject(root) else {
+                    print(root)
+
+                    return Disposables.create()
+                }
+
+                let jsonData = try JSONSerialization.data(withJSONObject: root, options: JSONSerialization.WritingOptions()) as NSData
+                let jsonString = NSString(data: jsonData as Data, encoding: String.Encoding.utf8.rawValue) as! String
+
+                self.saveFile(withName: outputFile, withContent: jsonString, encoding: String.Encoding.utf8)
+                        .subscribe(onCompleted: onCompleted, onError: { _ in
+                            observer(.error(RunnerErrors.fileSavingError))
+                        })
+            } catch _ {
+
+            }
 
             return Disposables.create()
         }
