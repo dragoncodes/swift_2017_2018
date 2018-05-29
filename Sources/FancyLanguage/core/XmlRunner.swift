@@ -45,7 +45,7 @@ class XmlRunner: Runner {
 
             if input.count > 1 {
 
-                observer(.error(RunnerErrors.validationError(message: "XmlRunner supports only one root one")))
+                observer(.error(RunnerErrors.validationError(message: "XmlRunner supports only one root node")))
 
                 return Disposables.create()
             }

@@ -3,21 +3,41 @@
 
 import Foundation
 
+struct JsonTraversalNode {
+
+    var name: String
+
+    var dict: [String: Any]?
+
+    var array: [Any]?
+
+    var value: Any?
+
+    init(name: String) {
+
+        self.name = name
+
+        self.dict = nil
+        self.array = nil
+        self.value = nil
+    }
+}
+
 class JsonRunner: Runner {
     func run(input: [FancyLanguageNode], rules: [String: RuleNode], outputFile: String) -> Maybe<String> {
         return Maybe<String>.create { observer in
 
-            func traverseNode(node: FancyLanguageNode, parentNode: FancyLanguageNode?) -> [String: Any]? {
+            func traverseNode(node: FancyLanguageNode, parentNode: FancyLanguageNode?) -> Any? {
 
                 guard let nodeValue = node.value else {
                     return nil
                 }
 
-                var output = [String: Any]()
+                var traversalResult = JsonTraversalNode(name: nodeValue)
 
                 if node.hasChildren {
 
-                    var childrenArray = [[String: Any]]()
+                    var childrenArray = [Any]()
 
                     for child in node.children {
 
@@ -28,9 +48,28 @@ class JsonRunner: Runner {
                         childrenArray.append(childDictionaryElement)
                     }
 
-                    output[nodeValue] = childrenArray
+                    traversalResult.array = childrenArray
                 } else {
-                    output[""] = nodeValue
+                    traversalResult.value = nodeValue
+                }
+
+                var output: Any? = nil
+
+                if let traversalValue = traversalResult.value {
+                    output = traversalValue
+                } else if let traversalDict = traversalResult.dict {
+
+                    var tempOutput = [String: Any]()
+                    tempOutput[traversalResult.name] = traversalResult.dict
+
+                    output = tempOutput
+
+                } else if let traversalArray = traversalResult.array {
+
+                    var tempOutput = [String: Any]()
+                    tempOutput[traversalResult.name] = traversalResult.array
+
+                    output = tempOutput
                 }
 
                 return output
@@ -43,10 +82,9 @@ class JsonRunner: Runner {
                 return Disposables.create()
             }
 
-            var root = [String: Any]()
-            //Compiler.JsonNode(firstNodeValue, firstNodeValue)
+            var root = traverseNode(node: firstNode, parentNode: nil)
 
-            root[firstNodeValue] = traverseNode(node: firstNode, parentNode: nil)
+            //Compiler.JsonNode(firstNodeValue, firstNodeValue)
 
             func onCompleted() {
                 observer(.completed)
