@@ -36,8 +36,6 @@ class FancyLanguageNode {
 
     func addChild(child: FancyLanguageNode) {
 
-        // TODO check if the child isn't self
-
         let isChildContained = children.contains { definedChild -> Bool in
             return definedChild === child
         }
