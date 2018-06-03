@@ -26,7 +26,14 @@ func run() {
             runner = JsonRunner()
         }
 
-        runner?.run(input: linkedResult, rules: ruleParser.rules, outputFile: outputFile)
+
+        guard let resolvedRunner = runner else {
+            print("Unsupported output extension  \(outputFileExtension)")
+
+            return
+        }
+
+        resolvedRunner.run(input: linkedResult, rules: ruleParser.rules, outputFile: outputFile)
                 .subscribe(onSuccess: nil, onError: { error in
                     print("Error while Running: \(error)")
                 }, onCompleted: {

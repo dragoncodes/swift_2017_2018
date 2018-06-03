@@ -22,32 +22,27 @@ class Compiler {
 
     private func parseInputFiles() -> Either<CompilerError, [FancyLanguageNode]> {
 
-
         var result = [FancyLanguageNode]()
 
         let readFileData = readFile(inputFile)
 
-        if let error = readFileData.left {
-            print("error", error)
-        } else if let fileContents = readFileData.right,
-                  let jsonDict = parseJson(from: fileContents).right {
+        guard let fileContents = readFileData.right,
+              let jsonDict = parseJson(from: fileContents).right else {
 
-            jsonDict.forEach { key, value in
+            return Either.fromLeft(CompilerError.fileParsingError(message: "Error reading file"))
+        }
 
-                print("Compilation \(key) \(value)")
+        jsonDict.forEach { key, value in
 
-                let node = toNode(from: (key: key, value: value))
+            let node = fancyNode(from: (key: key, value: value))
 
-                result.append(node)
-            }
+            result.append(node)
         }
 
         return Either.fromRight(result)
     }
 
-    private func toNode(from jsonObj: JsonNode) -> FancyLanguageNode {
-
-        // TODO swiftify this
+    private func fancyNode(from jsonObj: JsonNode) -> FancyLanguageNode {
 
         var result = FancyLanguageNode(name: jsonObj.key)
 
@@ -57,7 +52,7 @@ class Compiler {
 
             childObjects.reversed().forEach { childObj in
 
-                let childNode = toNode(from: childObj)
+                let childNode = fancyNode(from: childObj)
 
                 if childNode.name.starts(with: "@") {
                     result.addAttribute(name: childNode.name, value: childNode.value)
@@ -69,7 +64,7 @@ class Compiler {
                   let children = jsonObj.value as? Array<[String: Any]> {
 
             for childObj in children {
-                let child = toNode(from: (key: "", value: childObj))
+                let child = fancyNode(from: (key: "", value: childObj))
 
                 result.addChild(child: child)
             }

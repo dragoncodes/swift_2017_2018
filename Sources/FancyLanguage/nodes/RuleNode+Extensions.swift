@@ -28,8 +28,8 @@ extension RuleNode {
     func traverse(iteratorCallback: (String) -> ()) {
 
         if !values.isEmpty {
-            for iterValue in values {
-                iteratorCallback(iterValue)
+            for value in values {
+                iteratorCallback(value)
             }
         } else {
             iteratorCallback(value)
@@ -60,7 +60,14 @@ extension ChildRule {
             return true
         }
 
-        // TODO make this more generic
+        switch selector {
+        case "*", ">":
+            return true
+
+        default:
+            return false
+        }
+
         return false
     }
 }

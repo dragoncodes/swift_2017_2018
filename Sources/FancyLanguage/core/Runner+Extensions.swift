@@ -5,10 +5,35 @@ import Foundation
 
 protocol Runner {
 
-    func run(input: [FancyLanguageNode], rules: [String: RuleNode], outputFile: String) -> Maybe<String>
+    func formOutput(input: [FancyLanguageNode], rules: [String: RuleNode], outputFile: String) throws -> String
+
+    func traverseNode(node: FancyLanguageNode, parentNode: FancyLanguageNode?) -> Any?
 }
 
 extension Runner {
+
+    func run(input: [FancyLanguageNode], rules: [String: RuleNode], outputFile: String) -> Maybe<String> {
+
+        return Maybe<String>.create { observer in
+
+            do {
+                let output = try self.formOutput(input: input, rules: rules, outputFile: outputFile)
+
+                self.saveFile(withName: outputFile, withContent: output, encoding: .utf8)
+                        .subscribe(onCompleted: {
+                            observer(.completed)
+                        }, onError: { _ in
+                            observer(.error(RunnerErrors.fileSavingError))
+                        })
+
+            } catch {
+                observer(.error(error))
+            }
+
+            return Disposables.create()
+        }
+    }
+
     func saveFile(withName fileName: String, withContent content: String, encoding: String.Encoding) -> Completable {
         return Completable.create { observer in
 

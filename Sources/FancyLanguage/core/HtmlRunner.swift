@@ -3,62 +3,48 @@
 
 import Foundation
 
-
 class HtmlRunner: Runner {
 
-    func run(input: [FancyLanguageNode], rules: [String: RuleNode], outputFile: String) -> Maybe<String> {
-        return Maybe<String>.create { observer in
+    func formOutput(input: [FancyLanguageNode], rules: [String: RuleNode], outputFile: String) throws -> String {
+        var output = ""
+        for node in input {
 
-            func traverseNode(node: FancyLanguageNode, parentNode: FancyLanguageNode?) -> String {
-                var output = ""
-
-                guard let nodeValue = node.value else {
-                    return ""
-                }
-
-                let hasChildren = !node.children.isEmpty
-
-                if hasChildren {
-                    output += "<\(nodeValue)>"
-                } else {
-
-                    // TODO what is happening here
-
-                    if !nodeValue.isEmpty {
-                        output += nodeValue
-                    } else {
-
-                    }
-                }
-
-                for child in node.children {
-                    output += traverseNode(node: child, parentNode: node)
-                }
-
-                if hasChildren {
-                    output += "</\(nodeValue)>"
-                }
-
-                return output
+            guard let traversalOutput = self.traverseNode(node: node, parentNode: nil) as? String else {
+                continue
             }
 
-            var output = ""
-            for node in input {
-                output += traverseNode(node: node, parentNode: nil)
-            }
-
-            self.saveFile(
-                    withName: outputFile,
-                    withContent: output,
-                    encoding: String.Encoding.utf8
-            ).subscribe(onCompleted: {
-                observer(.completed)
-            }, onError: { _ in
-                observer(.error(RunnerErrors.fileSavingError))
-            })
-
-            return Disposables.create()
+            output += traversalOutput
         }
+
+        return output
     }
 
+    func traverseNode(node: FancyLanguageNode, parentNode: FancyLanguageNode?) -> Any? {
+        var output = ""
+
+        guard let nodeValue = node.value else {
+            return output
+        }
+
+        let hasChildren = !node.children.isEmpty
+
+        if hasChildren {
+            output += "<\(nodeValue)>"
+        } else {
+
+            if !nodeValue.isEmpty {
+                output += nodeValue
+            }
+        }
+
+        for child in node.children {
+            output += self.traverseNode(node: child, parentNode: node) as! String
+        }
+
+        if hasChildren {
+            output += "</\(nodeValue)>"
+        }
+
+        return output
+    }
 }
