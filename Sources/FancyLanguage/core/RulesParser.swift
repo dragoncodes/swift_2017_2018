@@ -33,6 +33,7 @@ class RuleParser {
 
                     for fileLine in fileLines {
 
+                        // it's a comment
                         if fileLine.contains("#") {
                             continue
                         }
@@ -62,7 +63,7 @@ class RuleParser {
 
                             for supportedChildSelector in supportedChildrenSelectors {
                                 let rawChildSelectorValue = supportedChildSelector.rawValue
-                                
+
                                 if childrenRule.contains(rawChildSelectorValue) {
 
                                     let childRule = ChildRule(selector: rawChildSelectorValue,
