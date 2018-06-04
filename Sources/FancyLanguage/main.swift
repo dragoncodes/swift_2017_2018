@@ -36,9 +36,7 @@ func run() {
         resolvedRunner.run(input: linkedResult, rules: ruleParser.rules, outputFile: outputFile)
                 .subscribe(onSuccess: nil, onError: { error in
                     print("Error while Running: \(error)")
-                }, onCompleted: {
-
-                })
+                }, onCompleted: nil)
     }
 
     for inputFile in inputFiles {

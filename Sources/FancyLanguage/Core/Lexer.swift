@@ -60,7 +60,7 @@ class Lexer {
     func readIdentifierOrNumber() -> String {
         var str = ""
         while let char = currentChar, char.isAlphanumeric || char == "." {
-            str.characters.append(char)
+            str.append(char)
             advanceIndex()
         }
         return str

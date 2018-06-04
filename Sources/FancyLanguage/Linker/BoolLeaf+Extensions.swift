@@ -7,10 +7,6 @@ protocol BoolLeaf {
     func evaluate() -> Bool
 }
 
-protocol OperandBoolLeaf: BoolLeaf {
-    var operand: BoolOperator? { get set }
-}
-
 class ValueBoolLeaf: BoolLeaf {
     var left: String?
     var right: String?

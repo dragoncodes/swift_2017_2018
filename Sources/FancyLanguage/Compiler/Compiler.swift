@@ -44,7 +44,7 @@ class Compiler {
 
     private func fancyNode(from jsonObj: JsonNode) -> FancyLanguageNode {
 
-        var result = FancyLanguageNode(name: jsonObj.key)
+        let result = FancyLanguageNode(name: jsonObj.key)
 
         if jsonObj.value is [String: Any] {
 

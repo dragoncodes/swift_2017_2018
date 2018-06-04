@@ -46,8 +46,8 @@ class RuleParser {
                         if ruleNode.name.contains("."),
                            let indexOfDot = ruleNode.name.indexOfDot() {
 
-                            let childrenRule = String(ruleNode.name.substring(from: indexOfDot).dropFirst())
-                            let mainRuleName = ruleNode.name.substring(to: indexOfDot)
+                            let childrenRule = String(ruleNode.name[indexOfDot...].dropFirst())
+                            let mainRuleName = String(ruleNode.name[..<indexOfDot])
 
                             guard !childrenRule.isSupportedFileExtension() else {
 

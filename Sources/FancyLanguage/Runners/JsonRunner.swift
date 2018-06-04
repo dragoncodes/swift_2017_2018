@@ -52,18 +52,29 @@ class JsonRunner: Runner {
         var output: Any? = nil
 
         if let traversalValue = traversalResult.value {
-            output = traversalValue
+
+            if let stringifiedValue = traversalValue as? String,
+               stringifiedValue != traversalResult.name {
+
+                var tmpOutput = [String: Any]()
+                tmpOutput[traversalResult.name] = traversalValue
+
+                output = tmpOutput
+            } else {
+                output = traversalValue
+            }
+
         } else if let traversalDict = traversalResult.dict {
 
             var tempOutput = [String: Any]()
-            tempOutput[traversalResult.name] = traversalResult.dict
+            tempOutput[traversalResult.name] = traversalDict
 
             output = tempOutput
 
         } else if let traversalArray = traversalResult.array {
 
             var tempOutput = [String: Any]()
-            tempOutput[traversalResult.name] = traversalResult.array
+            tempOutput[traversalResult.name] = traversalArray
 
             output = tempOutput
         }
