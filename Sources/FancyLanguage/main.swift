@@ -26,7 +26,6 @@ func run() {
             runner = JsonRunner()
         }
 
-
         guard let resolvedRunner = runner else {
             print("Unsupported output extension  \(outputFileExtension)")
 

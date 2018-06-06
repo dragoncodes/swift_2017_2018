@@ -46,8 +46,9 @@ class Compiler {
 
         let result = FancyLanguageNode(name: jsonObj.key)
 
-        if jsonObj.value is [String: Any] {
+        switch jsonObj.value {
 
+        case is [String: Any]:
             let childObjects = jsonObj.value as! [String: Any]
 
             childObjects.reversed().forEach { childObj in
@@ -60,8 +61,11 @@ class Compiler {
                     result.addChild(child: childNode)
                 }
             }
-        } else if jsonObj.value is Array<[String: Any]>,
-                  let children = jsonObj.value as? Array<[String: Any]> {
+        case is Array<[String: Any]>:
+
+            guard let children = jsonObj.value as? Array<[String: Any]> else {
+                break
+            }
 
             for childObj in children {
                 let child = fancyNode(from: (key: "", value: childObj))
@@ -69,13 +73,16 @@ class Compiler {
                 result.addChild(child: child)
             }
 
-        } else if jsonObj.value is String {
+        case is String:
 
-            do {
-                let stringValue = jsonObj.value as! String
-
-                result.value = stringValue
+            guard let stringValue = jsonObj.value as? String else {
+                break
             }
+
+            result.value = stringValue
+
+        default:
+            break
         }
 
         return result
