@@ -56,10 +56,6 @@ class ChildRule {
 extension ChildRule {
     func isNodeEligible(node: FancyLanguageNode) -> Bool {
 
-        if selector == "*" {
-            return true
-        }
-
         switch selector {
         case "*", ">":
             return true
